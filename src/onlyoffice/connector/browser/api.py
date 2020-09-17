@@ -14,9 +14,11 @@ from onlyoffice.connector.core.config import Config
 from onlyoffice.connector.core import fileUtils
 from onlyoffice.connector.core import utils
 from urllib.request import urlopen
-from Products.CMFCore.utils import getToolByName
 
+import logging
 import json
+
+logger = logging.getLogger("Plone")
 
 class Edit(form.EditForm):
     def isAvailable(self):
@@ -106,7 +108,9 @@ def get_config(self, forEdit):
         portal = portal_url.getPortalObject()
         config['editorConfig']['callbackUrl'] = portal.absolute_url() + "/onlyoffice-callback?uuid=%s" % uuid
 
-    return json.dumps(config)
+    dumped = json.dumps(config)
+    logger.debug("get_config\n" + dumped)
+    return dumped
 
 class Callback(BrowserView):
     def __call__(self):
@@ -116,15 +120,32 @@ class Callback(BrowserView):
 
         error = None
         response = {}
+
         try:
             body = json.loads(self.request.get('BODY'))
+            logger.debug("callback body:\n" + json.dumps(body))
+
+            if body["key"] != utils.getDocumentKey(self.context):
+                logger.debug("key different:" +  body["key"] + " - " + utils.getDocumentKey(self.context))
+            else:
+                logger.debug("same key")
             status = body['status']
             download = body.get('url')
+
             if (status == 2) | (status == 3): # mustsave, corrupted
+
+                logger.debug("Old key:" + utils.getDocumentKey(context))
+
                 context.file = NamedBlobFile(urlopen(download).read(), filename=context.file.filename)
                 context.reindexObject()
+
+                logger.debug("New key:" + utils.getDocumentKey(context))
+                logger.debug("Document saved and reindexed")
+
         except Exception as e:
             error = str(e)
+            logger.debug("Error: " + error)
+
         if error:
             response['error'] = 1
             response['message'] = error
@@ -132,5 +153,6 @@ class Callback(BrowserView):
         else:
             response['error'] = 0
             self.request.response.status = 200
-
-        return json.dumps(response)
+        dumped = json.dumps(response)
+        logger.debug("response:" + dumped)
+        return dumped
