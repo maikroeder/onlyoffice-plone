@@ -39,7 +39,7 @@
 
   <browser:page
       name="onlyoffice-callback"
-      for="plone.app.contenttypes.interfaces.IFile"
+      for="Products.CMFPlone.interfaces.IPloneSiteRoot"
       class=".api.Callback"
       permission="zope2.View"
       />
