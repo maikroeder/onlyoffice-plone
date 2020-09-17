@@ -5,6 +5,8 @@ from Products.Five.browser import BrowserView
 from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
 from plone.namedfile.file import NamedBlobFile
 from plone.registry.interfaces import IRegistry
+from plone.uuid.interfaces import IUUID
+from plone.app.uuid.utils import uuidToObject
 from z3c.form import form
 from zope.component import getMultiAdapter
 from zope.component import getUtility
@@ -12,6 +14,7 @@ from onlyoffice.connector.core.config import Config
 from onlyoffice.connector.core import fileUtils
 from onlyoffice.connector.core import utils
 from urllib.request import urlopen
+from Products.CMFCore.utils import getToolByName
 
 import json
 
@@ -97,7 +100,11 @@ def get_config(self, forEdit):
         }
     }
     if canEdit:
-        config['editorConfig']['callbackUrl'] = self.context.absolute_url() + '/onlyoffice-callback'
+        context = self.context.aq_base
+        uuid = IUUID(context, None)
+        portal_url = getToolByName(context, "portal_url")
+        portal = portal_url.getPortalObject()
+        config['editorConfig']['callbackUrl'] = portal.absolute_url() + "/onlyoffice-callback?uuid=%s" % uuid
 
     return json.dumps(config)
 
@@ -105,21 +112,19 @@ class Callback(BrowserView):
     def __call__(self):
         self.request.response.setHeader('Content-Type', 'application/json')
 
+        context = uuidToObject(self.request.QUERY_STRING.split("=")[1])
+
         error = None
         response = {}
-
         try:
             body = json.loads(self.request.get('BODY'))
             status = body['status']
             download = body.get('url')
             if (status == 2) | (status == 3): # mustsave, corrupted
-
-                self.context.file = NamedBlobFile(urlopen(download).read(), filename=self.context.file.filename)
-                self.context.reindexObject()
-
+                context.file = NamedBlobFile(urlopen(download).read(), filename=context.file.filename)
+                context.reindexObject()
         except Exception as e:
             error = str(e)
-
         if error:
             response['error'] = 1
             response['message'] = error
