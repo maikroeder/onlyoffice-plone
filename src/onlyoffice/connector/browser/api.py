@@ -123,7 +123,9 @@ class Download(BrowserView):
         uid = self.request.QUERY_STRING.split("=")[1]
         results = portal_catalog.unrestrictedSearchResults(UID=uid)
         path = results[0].getPath()
-        context = self.context.unrestrictedTraverse(path)
+        portal_url = getToolByName(self.context, "portal_url")
+        portal = portal_url.getPortalObject()
+        context = portal.unrestrictedTraverse(path)
         file = context.file
         set_headers(file, self.request.response, filename=file.filename)
         return stream_data(file)
@@ -137,7 +139,9 @@ class Callback(BrowserView):
         uid = self.request.QUERY_STRING.split("=")[1]
         results = portal_catalog.unrestrictedSearchResults(UID=uid)
         path = results[0].getPath()
-        context = self.context.unrestrictedTraverse(path)
+        portal_url = getToolByName(self.context, "portal_url")
+        portal = portal_url.getPortalObject()
+        context = portal.unrestrictedTraverse(path)
 
         error = None
         response = {}
