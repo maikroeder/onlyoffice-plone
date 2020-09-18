@@ -44,6 +44,13 @@
       permission="zope2.View"
       />
 
+  <browser:page
+      name="onlyoffice-download"
+      for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+      class=".api.Download"
+      permission="zope2.View"
+      />
+
   <browser:menuItem
       for="plone.app.contenttypes.interfaces.IFile"
       menu="plone_displayviews"
