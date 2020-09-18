@@ -53,6 +53,7 @@ class View(BrowserView):
         return self.index()
 
 def get_config(self, forEdit):
+
     def viewURLFor(self, item):
         cstate = getMultiAdapter((item, item.REQUEST), name='plone_context_state')
         return cstate.view_url()
@@ -61,6 +62,11 @@ def get_config(self, forEdit):
         context = aq_inner(self.context)
         portal_state = getMultiAdapter((context, self.request), name=u'plone_portal_state')
         return portal_state
+
+    context = self.context.aq_base
+    uuid = IUUID(context, None)
+    portal_url = getToolByName(context, "portal_url")
+    portal = portal_url.getPortalObject()
 
     canEdit = forEdit and bool(getSecurityManager().checkPermission('Modify portal content', self.context))
 
@@ -77,7 +83,7 @@ def get_config(self, forEdit):
         'documentType': fileUtils.getFileType(filename),
         'document': {
             'title': filename,
-            'url': self.context.absolute_url() + '/@@download',
+            'url': portal.absolute_url() + "/onlyoffice-download?uuid=%s" % uuid,
             'fileType': fileUtils.getFileExt(filename)[1:],
             'key': utils.getDocumentKey(self.context),
             'info': {
@@ -102,15 +108,17 @@ def get_config(self, forEdit):
         }
     }
     if canEdit:
-        context = self.context.aq_base
-        uuid = IUUID(context, None)
-        portal_url = getToolByName(context, "portal_url")
-        portal = portal_url.getPortalObject()
         config['editorConfig']['callbackUrl'] = portal.absolute_url() + "/onlyoffice-callback?uuid=%s" % uuid
 
     dumped = json.dumps(config)
     logger.debug("get_config\n" + dumped)
     return dumped
+
+
+class Download(BrowserView):
+    def __call__(self):
+        context = uuidToObject(self.request.QUERY_STRING.split("=")[1])
+        return context()
 
 class Callback(BrowserView):
     def __call__(self):
