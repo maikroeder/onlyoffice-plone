@@ -121,7 +121,6 @@ class Download(BrowserView):
     def __call__(self):
         context = uuidToObject(self.request.QUERY_STRING.split("=")[1])
         file = context.file
-        self.set_headers(context.file)
         set_headers(file, self.request.response, filename=file.filename)
         return stream_data(file)
 
