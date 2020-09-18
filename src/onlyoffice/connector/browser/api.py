@@ -119,7 +119,8 @@ def get_config(self, forEdit):
 
 class Download(BrowserView):
     def __call__(self):
-        context = uuidToObject(self.request.QUERY_STRING.split("=")[1])
+        portal_catalog = getToolByName(self.context, "portal_catalog")
+        context = portal_catalog.unrestrictedSearchResults(UID=self.request.QUERY_STRING.split("=")[1])[0].getObject()
         file = context.file
         set_headers(file, self.request.response, filename=file.filename)
         return stream_data(file)
