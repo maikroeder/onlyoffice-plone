@@ -14,6 +14,8 @@ from onlyoffice.connector.core.config import Config
 from onlyoffice.connector.core import fileUtils
 from onlyoffice.connector.core import utils
 from urllib.request import urlopen
+from plone.namedfile.utils import set_headers
+from plone.namedfile.utils import stream_data
 
 import logging
 import json
@@ -118,7 +120,10 @@ def get_config(self, forEdit):
 class Download(BrowserView):
     def __call__(self):
         context = uuidToObject(self.request.QUERY_STRING.split("=")[1])
-        return context()
+        file = context.file
+        self.set_headers(context.file)
+        set_headers(file, self.request.response, filename=file.filename)
+        return stream_data(file)
 
 class Callback(BrowserView):
     def __call__(self):
