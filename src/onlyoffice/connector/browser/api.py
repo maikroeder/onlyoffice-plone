@@ -133,7 +133,11 @@ class Callback(BrowserView):
     def __call__(self):
         self.request.response.setHeader('Content-Type', 'application/json')
 
-        context = uuidToObject(self.request.QUERY_STRING.split("=")[1])
+        portal_catalog = getToolByName(self.context, "portal_catalog")
+        uid = self.request.QUERY_STRING.split("=")[1]
+        results = portal_catalog.unrestrictedSearchResults(UID=uid)
+        path = results[0].getPath()
+        context = self.context.unrestrictedTraverse(path)
 
         error = None
         response = {}
