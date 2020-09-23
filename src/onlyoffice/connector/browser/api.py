@@ -121,7 +121,7 @@ def get_config(self, forEdit):
     # Hide editor config from browser
     del config['editorConfig']
     config['editorConfig']['document']['url'] = portal.absolute_url()
-    del config['editorConfig']['document']['key']
+    config['editorConfig']['document']['key'] = ""
 
     dumped = json.dumps(config)
     logger.debug("get_config\n" + dumped)
