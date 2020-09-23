@@ -119,7 +119,7 @@ def get_config(self, forEdit):
     config["token"] = jwt.encode(config, secret, algorithm="HS256").decode("utf-8")
 
     # Hide editor config from browser
-    del config['editorConfig']
+    config['editorConfig']['callbackUrl'] = portal.absolute_url()
     config['editorConfig']['document']['url'] = portal.absolute_url()
     config['editorConfig']['document']['key'] = ""
 
