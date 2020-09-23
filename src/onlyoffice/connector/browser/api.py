@@ -1,3 +1,5 @@
+import jwt
+import os
 from Acquisition import aq_inner
 from AccessControl import getSecurityManager
 from Products.CMFCore.utils import getToolByName
@@ -21,6 +23,7 @@ import logging
 import json
 
 logger = logging.getLogger("Plone")
+
 
 class Edit(form.EditForm):
     def isAvailable(self):
@@ -112,8 +115,12 @@ def get_config(self, forEdit):
     if canEdit:
         config['editorConfig']['callbackUrl'] = portal.absolute_url() + "/onlyoffice-callback?uuid=%s" % uuid
 
+    secret = os.environ["DOC_SERV_JWT_SECRET"]
+    config["token"] = jwt.encode(config, secret, algorithm="HS256").decode("utf-8")
+
     dumped = json.dumps(config)
     logger.debug("get_config\n" + dumped)
+
     return dumped
 
 
