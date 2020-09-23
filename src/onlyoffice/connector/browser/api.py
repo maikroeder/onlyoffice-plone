@@ -118,6 +118,9 @@ def get_config(self, forEdit):
     secret = os.environ["DOC_SERV_JWT_SECRET"]
     config["token"] = jwt.encode(config, secret, algorithm="HS256").decode("utf-8")
 
+    # Hide editor config from browser
+    del config['editorConfig']
+
     dumped = json.dumps(config)
     logger.debug("get_config\n" + dumped)
 
